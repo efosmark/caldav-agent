@@ -1,7 +1,9 @@
 """Exploring a simple conversation loop with a task management agent.
 
-This script sets up a basic conversation loop where a user can interact with an AI agent designed to manage tasks using a calendar service.
+This script sets up a basic conversation loop where a user can interact with an
+AI agent designed to manage tasks using a calendar service.
 """
+import pprint
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain.chat_models import init_chat_model
@@ -11,51 +13,68 @@ import dav
 import tools
 import config
 
-client = dav.TaskDAVClient(
-    url=config.caldav_url,
-    username=config.caldav_username,
-    password=config.caldav_password
-)
-
-system_prompt:list[str] = [
-    "You are a terse agent for managing tasks.",
-    "Respond with only the direct output.",
-    "Do not include follow-ups, explanations, or conversational tone.",
-    "No questions or suggestions unless explicitly asked for.",
-    "Do not use markdown formatting.",
-    f"Available calendar IDs are: {', '.join(client.calendar_list_ids())}"
-]
-
-def build_full_prompt(user_prompt:str):
+def build_full_prompt(client: dav.TaskDAVClient, user_prompt:str):
+    system_prompt:list[str] = [
+        "You are a terse agent for managing tasks.",
+        "Respond with only the direct output.",
+        "Do not include follow-ups, explanations, or conversational tone.",
+        "No questions or suggestions unless explicitly asked for.",
+        "Do not use markdown formatting.",
+        f"Available calendar IDs are: {', '.join(client.calendar_list_ids())}"
+    ]
     return {
         "messages": [
             ("system", " ".join(system_prompt)),
             ("human", user_prompt),
         ],
-    }, {"configurable": {"thread_id": "123456"}}
+    }
 
-def build_agent():
-    llm = init_chat_model(config.ai_model)
-    agent = create_react_agent(
-        llm=llm,
-        tools=tools.get_tools(),
-        build_prompt=build_full_prompt,
-        memory_saver=MemorySaver(),
+def build_agent(client: dav.TaskDAVClient):
+    return create_react_agent(
+        model=init_chat_model(config.ai_model),
+        tools=tools.get_taskdav_tools(client),
+        checkpointer=MemorySaver(),
     )
-    return agent
 
-def run_conversation_loop():
-    agent = build_agent()
+def handle_response(content):
+    """Handle the response from the agent."""
+    if content is None:
+        print("No response from agent.")
+    elif content == "":
+        print("Agent did not provide a response.")
+    elif isinstance(content, list):
+        print("\n".join(content))
+    elif isinstance(content, dict):
+        #pprint.pprint(content, indent=2)
+        try:
+            if "messages" in content and isinstance(content["messages"], list):
+                print(content["messages"][-1].content)
+        except KeyError:
+            print("Could not extract messages from content.")
+    else:
+        print(str(content))
+
+def run_conversation_loop(client: dav.TaskDAVClient):
+    """ Run a simple conversation loop with the agent."""
+    agent = build_agent(client)
+    
+    print("Type 'exit' or 'quit' to stop the conversation.")
     while True:
+        
+        print("-" * 80)
         user_prompt = input("You: ").strip()
+        print()
         if user_prompt.lower() in ["exit", "quit"]:
             break
-        if user_prompt == "":
+        elif user_prompt == "":
             continue
         
-        response = agent.invoke(build_full_prompt(user_prompt))
-        if response.error:
+        response = agent.invoke(build_full_prompt(client, user_prompt), {"configurable": {"thread_id": "123456"}})
+        if hasattr(response, "error") and response.error:
             print(f"Error: {response.error}")
+            continue
+        elif not hasattr(response, "content"):
+            handle_response(response)
             continue
         elif response.content is None:
             print("No response from agent.")
@@ -63,16 +82,17 @@ def run_conversation_loop():
         elif response.content == "":
             print("Agent did not provide a response.")
             continue
-        elif isinstance(response.content, list):
-            response.content = "\n".join(response.content)
-        elif isinstance(response.content, dict):
-            response.content = str(response.content)
-
-        print(f"Agent: {response.content}")
+        handle_response(response.content)
 
 
 if __name__ == "__main__":
-    run_conversation_loop()
+    client = dav.TaskDAVClient(
+        url=config.caldav_url,
+        username=config.caldav_username,
+        password=config.caldav_password
+    )
+
+    run_conversation_loop(client)
 
 
 
