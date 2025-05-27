@@ -1,3 +1,7 @@
+"""
+A scratchpad for manually implementing a ReAct agent using LangChain and Ollama.
+"""
+
 from typing import Dict, Callable, cast
 from langchain_ollama import ChatOllama
 from langchain.tools import StructuredTool

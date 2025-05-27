@@ -1,11 +1,25 @@
+"""
+This module provides a `TaskDAVClient` class that extends the `caldav.DAVClient` to handle tasks (VTODO components) in CalDAV calendars.
+It includes functionality to add, update, and retrieve tasks, as well as to list calendars and tasks.
+
+TODO: 
+- Implement error handling for network issues.
+- Add support for recurring tasks.
+- Implement task deletion (or preferably, marking as deleted or archived).
+- Calendar event management (VEVENT components) could be added in the future.
+
+This is designed to be used with the LangChain framework, allowing for integration with AI models and tools.
+See the `tools` module for LangChain tool definitions that utilize this client.
+"""
+from __future__ import annotations
 from typing import Annotated, Any, List, Optional, cast
-import caldav
-import icalendar
 from datetime import datetime
 from functools import lru_cache
-from langchain_core.tools import InjectedToolArg, tool, BaseTool
 
+import caldav
+import icalendar
 import vobject
+from langchain_core.tools import InjectedToolArg, tool, BaseTool
 
 class CalendarNotFound(Exception):
     """Raised when a calendar is not found by ID."""
