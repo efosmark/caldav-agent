@@ -31,7 +31,7 @@ def manual_react_agent(question: str) -> str:
             "Action: <tool name>\n"
             "Action Input: <input for the tool>\n"
             "Observation: <result from the tool>\n"
-            #"... (you can repeat Thought/Action/Observation) ...\n"
+            "... (you can repeat Thought/Action/Observation) ...\n"
             "Final Answer: <your final answer>\n\n"
         )
 

@@ -21,7 +21,7 @@
 3. Set up a config file
 
     ```shell
-    cp config.py.example config.py
+    cp src/config.py.example src/config.py
     ```
 
     And edit it for your CalDAV settings.
@@ -51,5 +51,5 @@ If using a different model, choose the proper library from `langchain`: <https:/
     LangChain expects the API key to be set in `OPENAI_API_KEY`, so run it like:
 
     ```shell
-    OPENAI_API_KEY=your-api-key-here ./.venv/bin/python conversation.py
+    OPENAI_API_KEY=your-api-key-here ./.venv/bin/python src/conversation.py
     ```
