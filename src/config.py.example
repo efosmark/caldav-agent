@@ -3,4 +3,5 @@ caldav_url='https://example'
 caldav_username=''
 caldav_password=''
 
+# Model used when using `run-prebuilt.py`
 ai_model='ollama:llama3.1'

@@ -19,7 +19,7 @@ from functools import lru_cache
 import caldav
 import icalendar
 import vobject
-from langchain_core.tools import InjectedToolArg, tool, BaseTool
+from langchain_core.tools import InjectedToolArg
 
 class CalendarNotFound(Exception):
     """Raised when a calendar is not found by ID."""
